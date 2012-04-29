@@ -1,0 +1,33 @@
+--- linux-2.6.24.orig/arch/arm/mm/alignment.c	2008-02-10 15:58:30.000000000 +0000
++++ linux-2.6.24/arch/arm/mm/alignment.c	2008-02-10 16:29:48.000000000 +0000
+@@ -796,6 +796,8 @@
+ 	res->write_proc = proc_alignment_write;
+ #endif
+ 
++	ai_usermode = CONFIG_ALIGNMENT_HANDLING;
++
+ 	hook_fault_code(1, do_alignment, SIGILL, "alignment exception");
+ 	hook_fault_code(3, do_alignment, SIGILL, "alignment exception");
+ 
+--- linux-2.6.24.orig/arch/arm/Kconfig	2008-02-10 16:02:22.000000000 +0000
++++ linux-2.6.24/arch/arm/Kconfig	2008-02-10 16:29:48.000000000 +0000
+@@ -776,6 +776,19 @@
+ 	  correct operation of some network protocols. With an IP-only
+ 	  configuration it is safe to say N, otherwise say Y.
+ 
++config ALIGNMENT_HANDLING
++	hex "Userspace alignment trap handling"
++	default "0x3"
++	depends on ALIGNMENT_TRAP
++	help
++	  How should we handle alignment errors in userspace by default?  This is a bitfield where:
++	  0 - silently ignore alignment errors (will lead to unexpected results)
++	  1 - report alignment errors through printk (will lead to unexpected results, but you'll know about them)
++	  2 - fix the alignment and make things work properly (performance degradation for un-aligned code)
++	  4 - raise SIGBUS on alignment traps
++	  A good number to choose is probably either 3 (work slowly but log message) or 5 (log message and SIGBUS).
++	  You can change the behavior at runtime through /proc/cpu/alignment if you have PROC_FS enabled.
++
+ endmenu
+ 
+ menu "Boot options"

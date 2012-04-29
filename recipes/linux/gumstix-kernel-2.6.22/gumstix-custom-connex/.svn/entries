@@ -1,0 +1,40 @@
+8
+
+dir
+309
+https://gumstix.svn.sourceforge.net/svnroot/gumstix/trunk/com.gumstix.collection/packages/linux/gumstix-kernel-2.6.22/gumstix-custom-connex
+https://gumstix.svn.sourceforge.net/svnroot/gumstix
+
+
+
+2008-03-17T05:38:52.455321Z
+281
+sakoman
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+b85c6266-aee1-4070-9685-74336958316a
+
+defconfig
+file
+
+
+
+
+2008-04-02T12:07:32.000000Z
+4a19fcd5309cfdaf9c4553ae74b89176
+2008-03-17T05:38:52.455321Z
+281
+sakoman
+

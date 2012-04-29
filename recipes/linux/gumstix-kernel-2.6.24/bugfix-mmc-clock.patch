@@ -1,0 +1,12 @@
+--- linux-2.6.24.orig/drivers/mmc/host/pxamci.c	2008-01-24 22:58:37.000000000 +0000
++++ linux-2.6.24/drivers/mmc/host/pxamci.c	2008-02-09 10:39:26.000000000 +0000
+@@ -380,8 +380,7 @@
+ 		 * desire.  check for that condition and adjust
+ 		 * as appropriate.
+ 		 */
+-		if (rate / clk > ios->clock)
+-			clk <<= 1;
++		if(clk > (1<<6)) clk = (1<<6);
+ 		host->clkrt = fls(clk) - 1;
+ 
+ 		/*

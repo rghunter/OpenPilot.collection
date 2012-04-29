@@ -1,0 +1,417 @@
+--- linux-2.6.24.orig/drivers/video/pxafb.c	2008-02-10 16:33:38.000000000 +0000
++++ linux-2.6.24/drivers/video/pxafb.c	2008-02-12 10:36:12.000000000 +0000
+@@ -210,6 +210,10 @@
+         case 4:  ret = LCCR3_4BPP; break;
+         case 8:  ret = LCCR3_8BPP; break;
+         case 16: ret = LCCR3_16BPP; break;
++	case 18: ret = (var->nonstd == 24 ? LCCR3_18BPP_PACKED : LCCR3_18BPP); break; 
++	case 19: ret = (var->nonstd == 24 ? LCCR3_19BPP_PACKED : LCCR3_19BPP); break; 
++        case 24: ret = LCCR3_24BPP; break;
++        case 25: ret = LCCR3_25BPP; break;
+         }
+         return ret;
+ }
+@@ -223,11 +227,12 @@
+  */
+ static unsigned int pxafb_display_dma_period(struct fb_var_screeninfo *var)
+ {
+-       /*
+-        * Period = pixclock * bits_per_byte * bytes_per_transfer
+-        *              / memory_bits_per_pixel;
+-        */
+-       return var->pixclock * 8 * 16 / var->bits_per_pixel;
++	/*
++	 * Period = pixclock * bits_per_byte * bytes_per_transfer
++	 *              / memory_bits_per_pixel;
++	 */
++	struct pxafb_mach_info *inf = fbi->dev->platform_data;
++	return var->pixclock * 8 * 16 / (var->nonstd ? var->nonstd : var->bits_per_pixel);
+ }
+ 
+ extern unsigned int get_clk_frequency_khz(int info);
+@@ -326,6 +331,26 @@
+ 		var->green.offset = 5;  var->green.length = 6;
+ 		var->blue.offset  = 0;  var->blue.length  = 5;
+ 		var->transp.offset = var->transp.length = 0;
++	} else if (var->bits_per_pixel == 18) {
++		var->transp.offset = var->transp.length = 0;
++		var->red.offset = 12; var->red.length=6;
++		var->green.offset = 6; var->green.length=6;
++		var->blue.offset = 0; var->blue.length=6;
++	} else if (var->bits_per_pixel == 19) {
++		var->transp.offset = 18; var->transp.length = 1;
++		var->red.offset = 12; var->red.length=6;
++		var->green.offset = 6; var->green.length=6;
++		var->blue.offset = 0; var->blue.length=6;
++	} else if (var->bits_per_pixel == 24) {
++		var->transp.offset = var->transp.length = 0;
++		var->red.offset = 16; var->red.length=8;
++		var->green.offset = 8; var->green.length=8;
++		var->blue.offset = 0; var->blue.length=8;
++	} else if (var->bits_per_pixel == 25) {
++		var->transp.offset = 18; var->transp.length = 1;
++		var->red.offset = 16; var->red.length=8;
++		var->green.offset = 8; var->green.length=8;
++		var->blue.offset = 0; var->blue.length=8;
+ 	} else {
+ 		var->red.offset = var->green.offset = var->blue.offset = var->transp.offset = 0;
+ 		var->red.length   = 8;
+@@ -361,7 +386,7 @@
+ 
+ 	pr_debug("pxafb: set_par\n");
+ 
+-	if (var->bits_per_pixel == 16)
++	if (var->bits_per_pixel >= 16)
+ 		fbi->fb.fix.visual = FB_VISUAL_TRUECOLOR;
+ 	else if (!fbi->cmap_static)
+ 		fbi->fb.fix.visual = FB_VISUAL_PSEUDOCOLOR;
+@@ -374,9 +399,10 @@
+ 		fbi->fb.fix.visual = FB_VISUAL_STATIC_PSEUDOCOLOR;
+ 	}
+ 
+-	fbi->fb.fix.line_length = var->xres_virtual *
+-				  var->bits_per_pixel / 8;
+-	if (var->bits_per_pixel == 16)
++		fbi->fb.fix.line_length = var->xres_virtual *
++					  (var->nonstd ? var->nonstd : var->bits_per_pixel) / 8;
++
++	if (var->bits_per_pixel >= 16)
+ 		fbi->palette_size = 0;
+ 	else
+ 		fbi->palette_size = var->bits_per_pixel == 1 ? 4 : 1 << var->bits_per_pixel;
+@@ -396,7 +422,7 @@
+ 	 */
+ 	pxafb_set_truecolor(fbi->fb.fix.visual == FB_VISUAL_TRUECOLOR);
+ 
+-	if (fbi->fb.var.bits_per_pixel == 16)
++	if (fbi->fb.var.bits_per_pixel >= 16)
+ 		fb_dealloc_cmap(&fbi->fb.cmap);
+ 	else
+ 		fb_alloc_cmap(&fbi->fb.cmap, 1<<fbi->fb.var.bits_per_pixel, 0);
+@@ -608,6 +634,14 @@
+ 	case 8:
+ 	case 16:
+ 		break;
++	case 18:
++	case 19:
++	case 24:
++	case 25:
++		if(var->nonstd) break;
++		printk(KERN_ERR "%s: must specify nonstd when bit depth==%d\n",
++			fbi->fb.fix.id, var->bits_per_pixel);
++		break;
+ 	default:
+ 		printk(KERN_ERR "%s: invalid bit depth %d\n",
+ 		       fbi->fb.fix.id, var->bits_per_pixel);
+@@ -709,7 +743,7 @@
+ 							sizeof(u32);
+ 	fbi->dmadesc_palette_cpu->ldcmd |= LDCMD_PAL;
+ 
+-	if (var->bits_per_pixel == 16) {
++	if (var->bits_per_pixel >= 16) {
+ 		/* palette shouldn't be loaded in true-color mode */
+ 		fbi->dmadesc_fbhigh_cpu->fdadr = fbi->dmadesc_fbhigh_dma;
+ 		fbi->fdadr0 = fbi->dmadesc_fbhigh_dma; /* no pal just fbhigh */
+@@ -817,8 +851,19 @@
+ 		return;
+         }
+ 
+-	for (gpio = 58; ldd_bits; gpio++, ldd_bits--)
++	for (gpio = 58; min(ldd_bits,16); gpio++, ldd_bits--)
+ 		pxa_gpio_mode(gpio | GPIO_ALT_FN_2_OUT);
++
++	switch(fbi->fb.var.bits_per_pixel)
++	{
++		case 25:
++		case 24:
++		case 19:
++		case 18:
++			pxa_gpio_mode(GPIO86_LDD_16_MD);
++			pxa_gpio_mode(GPIO87_LDD_17_MD);
++		default: break;
++	}
+ 	pxa_gpio_mode(GPIO74_LCD_FCLK_MD);
+ 	pxa_gpio_mode(GPIO75_LCD_LCLK_MD);
+ 	pxa_gpio_mode(GPIO76_LCD_PCLK_MD);
+@@ -1177,7 +1222,7 @@
+ 	fbi->fb.fix.ywrapstep	= 0;
+ 	fbi->fb.fix.accel	= FB_ACCEL_NONE;
+ 
+-	fbi->fb.var.nonstd	= 0;
++	fbi->fb.var.nonstd	= mode->nonstd;
+ 	fbi->fb.var.activate	= FB_ACTIVATE_NOW;
+ 	fbi->fb.var.height	= -1;
+ 	fbi->fb.var.width	= -1;
+@@ -1204,7 +1249,7 @@
+ 	fbi->task_state			= (u_char)-1;
+ 
+ 	for (i = 0; i < inf->num_modes; i++) {
+-		smemlen = mode[i].xres * mode[i].yres * mode[i].bpp / 8;
++		smemlen = mode[i].xres * mode[i].yres * (mode[i].nonstd ? mode[i].nonstd : mode[i].bpp) / 8;
+ 		if (smemlen > fbi->fb.fix.smem_len)
+ 			fbi->fb.fix.smem_len = smemlen;
+ 	}
+@@ -1232,12 +1277,19 @@
+                 if (!strncmp(this_opt, "mode:", 5)) {
+ 			const char *name = this_opt+5;
+ 			unsigned int namelen = strlen(name);
+-			int res_specified = 0, bpp_specified = 0;
+-			unsigned int xres = 0, yres = 0, bpp = 0;
++			int res_specified = 0, bpp_specified = 0, nonstd_specified = 0;
++			unsigned int xres = 0, yres = 0, bpp = 0, nonstd = 0;
+ 			int yres_specified = 0;
+ 			int i;
+ 			for (i = namelen-1; i >= 0; i--) {
+ 				switch (name[i]) {
++				case '/':
++					if (!nonstd_specified) {
++						nonstd = simple_strtoul(&name[i+1], NULL, 0);
++						nonstd_specified = 1;
++					} else
++						goto done;
++					break;
+ 				case '-':
+ 					namelen = i;
+ 					if (!bpp_specified && !yres_specified) {
+@@ -1270,12 +1322,29 @@
+ 			}
+ 			if (bpp_specified)
+ 				switch (bpp) {
++				case 18:
++				case 19:
++				case 24:
++				case 25:
++					if(nonstd_specified && (((bpp == 18 || bpp == 19) && nonstd == 24) || nonstd == 32))
++					{
++						inf->modes[0].nonstd = nonstd;
++						dev_info(dev, "overriding nonstd pixel packing: %d\n",nonstd);
++					} else {
++						dev_err(dev, "Depth %d requires nonstd to be specified\n",bpp);
++						break;
++					}
+ 				case 1:
+ 				case 2:
+ 				case 4:
+ 				case 8:
+ 				case 16:
+ 					inf->modes[0].bpp = bpp;
++					if(nonstd_specified) {
++						dev_err(dev, "Depth %d requires nonstd to *not* be specified\n",bpp);
++					} else {
++						inf->modes[0].nonstd = 0;
++					}
+ 					dev_info(dev, "overriding bit depth: %d\n", bpp);
+ 					break;
+ 				default:
+--- linux-2.6.24.orig/include/asm-arm/arch-pxa/pxa-regs.h	2008-02-10 16:02:22.000000000 +0000
++++ linux-2.6.24/include/asm-arm/arch-pxa/pxa-regs.h	2008-02-12 10:36:12.000000000 +0000
+@@ -1326,6 +1326,8 @@
+ #define GPIO83_NSTXD		83	/* NSSP transmit */
+ #define GPIO84_NSRXD		84	/* NSSP receive */
+ #define GPIO85_nPCE_1		85	/* Card Enable for Card Space (PXA27x) */
++#define GPIO86_LDD_16		86	/* LCD data pin 16 */
++#define GPIO87_LDD_17		87	/* LCD data pin 17 */
+ #define GPIO92_MMCDAT0		92	/* MMC DAT0 (PXA27x) */
+ #define GPIO102_nPCE_1		102	/* PCMCIA (PXA27x) */
+ #define GPIO105_nPCE_2		105	/* Card Enable for Card Space (PXA27x) */
+@@ -1471,6 +1473,8 @@
+ #define GPIO84_NSSP_TX      	(84 | GPIO_ALT_FN_1_OUT)
+ #define GPIO84_NSSP_RX      	(84 | GPIO_ALT_FN_2_IN)
+ #define GPIO85_nPCE_1_MD	(85 | GPIO_ALT_FN_1_OUT)
++#define GPIO86_LDD_16_MD	(86 | GPIO_ALT_FN_2_OUT)
++#define GPIO87_LDD_17_MD	(87 | GPIO_ALT_FN_2_OUT)
+ #define GPIO92_MMCDAT0_MD	(92 | GPIO_ALT_FN_1_OUT)
+ #define GPIO102_nPCE_1_MD	(102 | GPIO_ALT_FN_1_OUT)
+ #define GPIO104_pSKTSEL_MD	(104 | GPIO_ALT_FN_1_OUT)
+@@ -1863,6 +1867,12 @@
+ #define LCCR3_4BPP (2 << 24)
+ #define LCCR3_8BPP (3 << 24)
+ #define LCCR3_16BPP (4 << 24)
++#define LCCR3_18BPP (5 << 24)
++#define LCCR3_18BPP_PACKED (6 << 24)
++#define LCCR3_19BPP (7 << 24)
++#define LCCR3_19BPP_PACKED (1 << 29)
++#define LCCR3_24BPP ((1 << 29) | (1 << 24))
++#define LCCR3_25BPP ((1 << 29) | (2 << 24))
+ 
+ #define LCCR3_PDFOR_0 (0 << 30)
+ #define LCCR3_PDFOR_1 (1 << 30)
+--- linux-2.6.24.orig/include/asm-arm/arch-pxa/pxafb.h	2008-02-10 15:59:02.000000000 +0000
++++ linux-2.6.24/include/asm-arm/arch-pxa/pxafb.h	2008-02-12 10:36:12.000000000 +0000
+@@ -25,6 +25,7 @@
+ 	u_short		xres;
+ 	u_short		yres;
+ 
++	/* bpp is the path-to-screen bits per pixel, not the in-memory storage required */
+ 	u_char		bpp;
+ 	u_char		hsync_len;
+ 	u_char		left_margin;
+@@ -36,7 +37,9 @@
+ 	u_char		sync;
+ 
+ 	u_int		cmap_greyscale:1,
+-			unused:31;
++			nonstd:8,	/* nonstd represents the in-memory bits per pixel
++						ie 24 or 32 for 18/19bpp mode, or 32 for 24/25bpp mode */
++			unused:23;
+ };
+ 
+ struct pxafb_mach_info {
+--- linux-2.6.24.orig/arch/arm/mach-pxa/gumstix.c	2008-02-12 10:30:13.000000000 +0000
++++ linux-2.6.24/arch/arm/mach-pxa/gumstix.c	2008-02-12 10:36:12.000000000 +0000
+@@ -146,7 +146,8 @@
+ 	.pixclock	= 110000,
+ 	.xres		= 480,
+ 	.yres		= 272,
+-	.bpp		= 16,
++	.bpp		= 18,
++	.nonstd		= 24,
+ 	.hsync_len	= 41,
+ 	.left_margin	= 2,
+ 	.right_margin	= 2,
+@@ -174,7 +175,8 @@
+ 	.vsync_len	= 10, // VLW from datasheet: 10 typ
+ 	.upper_margin	= 2, // VBP - VLW from datasheet: 12 - 10 = 2
+ 	.lower_margin	= 4, // VFP from datasheet: 4 typ
+-	.bpp		= 16,
++	.bpp		= 18,
++	.nonstd		= 24,
+ 	.sync		= 0, // Hsync and Vsync both active low
+ };
+ 
+--- linux-2.6.24.orig/drivers/video/fb_draw.h	2008-02-10 15:58:54.000000000 +0000
++++ linux-2.6.24/drivers/video/fb_draw.h	2008-02-12 10:36:12.000000000 +0000
+@@ -36,7 +36,10 @@
+ 		return 0x0001001001001001ul*pixel;
+ 	case 16:
+ 		return 0x0001000100010001ul*pixel;
++	case 18:
++	case 19:
+ 	case 24:
++	case 25:
+ 		return 0x0000000001000001ul*pixel;
+ 	case 32:
+ 		return 0x0000000100000001ul*pixel;
+@@ -61,7 +64,10 @@
+ 		return 0x00001001ul*pixel;
+ 	case 16:
+ 		return 0x00010001ul*pixel;
++	case 18:
++	case 19:
+ 	case 24:
++	case 25:
+ 		return 0x00000001ul*pixel;
+ 	case 32:
+ 		return 0x00000001ul*pixel;
+--- linux-2.6.24.orig/drivers/video/cfbfillrect.c	2008-02-10 15:58:54.000000000 +0000
++++ linux-2.6.24/drivers/video/cfbfillrect.c	2008-02-12 10:36:12.000000000 +0000
+@@ -282,7 +282,7 @@
+ 	unsigned long pat, fg;
+ 	unsigned long width = rect->width, height = rect->height;
+ 	int bits = BITS_PER_LONG, bytes = bits >> 3;
+-	u32 bpp = p->var.bits_per_pixel;
++	u32 bpp = (p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel);
+ 	unsigned long __iomem *dst;
+ 	int dst_idx, left;
+ 
+--- linux-2.6.24.orig/drivers/video/cfbimgblt.c	2008-02-10 15:58:54.000000000 +0000
++++ linux-2.6.24/drivers/video/cfbimgblt.c	2008-02-12 10:36:12.000000000 +0000
+@@ -84,7 +84,7 @@
+ 	/* Draw the penguin */
+ 	u32 __iomem *dst, *dst2;
+ 	u32 color = 0, val, shift;
+-	int i, n, bpp = p->var.bits_per_pixel;
++	int i, n, bpp = (p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel);
+ 	u32 null_bits = 32 - bpp;
+ 	u32 *palette = (u32 *) p->pseudo_palette;
+ 	const u8 *src = image->data;
+@@ -142,7 +142,7 @@
+ 				  u32 start_index,
+ 				  u32 pitch_index)
+ {
+-	u32 shift, color = 0, bpp = p->var.bits_per_pixel;
++	u32 shift, color = 0, bpp = (p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel);
+ 	u32 __iomem *dst, *dst2;
+ 	u32 val, pitch = p->fix.line_length;
+ 	u32 null_bits = 32 - bpp;
+@@ -216,7 +216,7 @@
+ 				  u8 __iomem *dst1, u32 fgcolor, 
+ 				  u32 bgcolor) 
+ {
+-	u32 fgx = fgcolor, bgx = bgcolor, bpp = p->var.bits_per_pixel;
++	u32 fgx = fgcolor, bgx = bgcolor, bpp = (p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel);
+ 	u32 ppw = 32/bpp, spitch = (image->width + 7)/8;
+ 	u32 bit_mask, end_mask, eorx, shift;
+ 	const char *s = image->data, *src;
+@@ -265,7 +265,7 @@
+ void cfb_imageblit(struct fb_info *p, const struct fb_image *image)
+ {
+ 	u32 fgcolor, bgcolor, start_index, bitstart, pitch_index = 0;
+-	u32 bpl = sizeof(u32), bpp = p->var.bits_per_pixel;
++	u32 bpl = sizeof(u32), bpp = (p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel);
+ 	u32 width = image->width;
+ 	u32 dx = image->dx, dy = image->dy;
+ 	u8 __iomem *dst1;
+--- linux-2.6.24.orig/drivers/video/cfbcopyarea.c	2008-02-10 15:58:54.000000000 +0000
++++ linux-2.6.24/drivers/video/cfbcopyarea.c	2008-02-12 10:37:32.000000000 +0000
+@@ -390,8 +390,8 @@
+ 	dst = src = (unsigned long __iomem *)((unsigned long)p->screen_base & ~(bytes-1));
+ 	dst_idx = src_idx = 8*((unsigned long)p->screen_base & (bytes-1));
+ 	// add offset of source and target area
+-	dst_idx += dy*bits_per_line + dx*p->var.bits_per_pixel;
+-	src_idx += sy*bits_per_line + sx*p->var.bits_per_pixel;
++	dst_idx += dy*bits_per_line + dx*(p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel);
++	src_idx += sy*bits_per_line + sx*(p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel);
+ 
+ 	if (p->fbops->fb_sync)
+ 		p->fbops->fb_sync(p);
+@@ -405,7 +405,7 @@
+ 			src += src_idx >> (ffs(bits) - 1);
+ 			src_idx &= (bytes - 1);
+ 			bitcpy_rev(dst, dst_idx, src, src_idx, bits,
+-				width*p->var.bits_per_pixel, bswapmask);
++				width*(p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel), bswapmask);
+ 		}
+ 	} else {
+ 		while (height--) {
+@@ -414,7 +414,7 @@
+ 			src += src_idx >> (ffs(bits) - 1);
+ 			src_idx &= (bytes - 1);
+ 			bitcpy(dst, dst_idx, src, src_idx, bits,
+-				width*p->var.bits_per_pixel, bswapmask);
++				width*(p->var.nonstd ? p->var.nonstd : p->var.bits_per_pixel), bswapmask);
+ 			dst_idx += bits_per_line;
+ 			src_idx += bits_per_line;
+ 		}
+--- linux-2.6.24.orig/drivers/video/console/fbcon.c	2008-02-10 15:58:54.000000000 +0000
++++ linux-2.6.24/drivers/video/console/fbcon.c	2008-02-12 10:36:12.000000000 +0000
+@@ -1038,9 +1038,10 @@
+ 
+ 	DPRINTK("mode:   %s\n", info->fix.id);
+ 	DPRINTK("visual: %d\n", info->fix.visual);
+-	DPRINTK("res:    %dx%d-%d\n", info->var.xres,
++	DPRINTK("res:    %dx%d-%d(%d)\n", info->var.xres,
+ 		info->var.yres,
+-		info->var.bits_per_pixel);
++		info->var.bits_per_pixel,
++		info->var.nonstd ? info->var.nonstd : info->var.bits_per_pixel);
+ 
+ #ifdef CONFIG_ATARI
+ 	if (MACH_IS_ATARI) {
+--- linux-2.6.24.orig/Documentation/fb/pxafb.txt	2008-02-10 15:58:27.000000000 +0000
++++ linux-2.6.24/Documentation/fb/pxafb.txt	2008-02-12 10:36:12.000000000 +0000
+@@ -9,11 +9,13 @@
+ or on the kernel command line
+ 	video=pxafb:mode:640x480-8,passive
+ 
+-mode:XRESxYRES[-BPP]
++mode:XRESxYRES[-BPP[/PACKING]]
+ 	XRES == LCCR1_PPL + 1
+ 	YRES == LLCR2_LPP + 1
+ 		The resolution of the display in pixels
+ 	BPP == The bit depth. Valid values are 1, 2, 4, 8 and 16.
++	PACKING == The in-memory bits per pixel.  Valid values are 24, 32 when
++			BPP == 18,19,24,25
+ 
+ pixclock:PIXCLOCK
+ 	Pixel clock in picoseconds

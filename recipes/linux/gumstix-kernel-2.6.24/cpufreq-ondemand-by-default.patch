@@ -1,0 +1,11 @@
+--- linux-2.6.24.orig/drivers/cpufreq/Kconfig	2008-01-24 22:58:37.000000000 +0000
++++ linux-2.6.24/drivers/cpufreq/Kconfig	2008-02-02 11:48:56.000000000 +0000
+@@ -58,7 +58,7 @@
+ 
+ choice
+ 	prompt "Default CPUFreq governor"
+-	default CPU_FREQ_DEFAULT_GOV_USERSPACE if CPU_FREQ_SA1100 || CPU_FREQ_SA1110
++	default CPU_FREQ_DEFAULT_GOV_USERSPACE if CPU_FREQ_SA1100 || CPU_FREQ_SA1110 || CPU_FREQ_PXA
+ 	default CPU_FREQ_DEFAULT_GOV_PERFORMANCE
+ 	help
+ 	  This option sets which CPUFreq governor shall be loaded at

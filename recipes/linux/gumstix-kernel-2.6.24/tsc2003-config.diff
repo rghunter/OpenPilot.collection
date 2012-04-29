@@ -1,0 +1,33 @@
+--- linux-2.6.24.orig/drivers/i2c/chips/Kconfig	2008-01-24 22:58:37.000000000 +0000
++++ linux-2.6.24/drivers/i2c/chips/Kconfig	2008-02-01 15:35:40.000000000 +0000
+@@ -143,6 +143,20 @@
+ 	  This driver can also be built as a module.  If so, the module
+ 	  will be called max6875.
+ 
++config SENSORS_TSC2003
++	tristate "TI TSC2003"
++	depends on I2C && EXPERIMENTAL
++	default n
++	help
++	  Driver for TI tsc2003 touchscreen and sensor chip/
++
++config SENSORS_TSC2003_SYSFS
++	tristate "TI TSC2003 sysfs interface
++	depends on SENSORS_TSC2003
++	default n
++	help
++	  Enabled the sysfs interface for tsc2003
++
+ config SENSORS_TSL2550
+ 	tristate "Taos TSL2550 ambient light sensor"
+ 	depends on EXPERIMENTAL
+--- linux-2.6.24.orig/drivers/i2c/chips/Makefile	2008-01-24 22:58:37.000000000 +0000
++++ linux-2.6.24/drivers/i2c/chips/Makefile	2008-02-01 15:36:23.000000000 +0000
+@@ -15,6 +15,7 @@
+ obj-$(CONFIG_TPS65010)		+= tps65010.o
+ obj-$(CONFIG_MENELAUS)		+= menelaus.o
+ obj-$(CONFIG_SENSORS_TSL2550)	+= tsl2550.o
++obj-$(CONFIG_SENSORS_TSC2003)	+= tsc2003.o
+ 
+ ifeq ($(CONFIG_I2C_DEBUG_CHIP),y)
+ EXTRA_CFLAGS += -DDEBUG

@@ -1,0 +1,25 @@
+description {
+ * @brief chemical
+
+The @p chemical interface provides access to a chemical sensor providing a set of id, concentration and temperature.
+}
+
+/** Data subtype:   */
+message { DATA, STATE, 1, player_chemical_data_t };
+
+
+/** @brief Data: scan (@ref PLAYER_CHEMICAL_DATA_STATE)
+
+The @p chemical interface returns a chemical ID, a concentration and a temperature. */
+typedef struct player_chemical_data
+{
+  /** The Id of the chemical. */
+  uint16_t chemical_id;
+  /** The concentration of the chemical [0;99.9] (%) */
+  float concentration;
+  /** The temperature [0;99.9] (oC) */
+  float temperature;
+} player_chemical_data_t;
+
+
+/** @} */

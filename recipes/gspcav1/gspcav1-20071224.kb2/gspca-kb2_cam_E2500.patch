@@ -1,0 +1,67 @@
+diff -ur gspca_core.c.orig gspca_core.c
+--- gspcav1-20071224-kb2/gspca_core.c.orig	2008-02-13 17:44:02.000000000 +0100
++++ gspcav1-20071224-kb2/gspca_core.c	2009-03-03 22:14:34.000000000 +0100
+@@ -427,6 +427,7 @@
+ 	Lenovo,
+ 	LogitechQC4Notebooks,
+ 	PhilipsSPC220NC,
++	LogitechQuickCamE2500,
+ 	LastCamera
+ };
+ static struct cam_list clist[] = {
+@@ -625,6 +626,7 @@
+ 	{Lenovo,"lenovo MI1310_SOC"},
+ 	{LogitechQC4Notebooks,"Logitech QuickCam for Notebooks"},
+ 	{PhilipsSPC220NC,"Philips SPC220NC PAC207"},
++	{LogitechQuickCamE2500,"Logitech QuickCam E2500"},
+ 	{-1, NULL}
+ };
+ static __devinitdata struct usb_device_id device_table[] = {
+@@ -839,6 +841,7 @@
+ 	{USB_DEVICE(0x046d, 0x08af)},	/* Logitech QuickCam Cool */
+ 	{USB_DEVICE(0x093a, 0x2472)},	/* PAC207 Genius VideoCam ge110 */
+ 	{USB_DEVICE(0x093a, 0x2463)},	/* Philips spc200nc pac207 */
++	{USB_DEVICE(0x046d, 0x089d)},	/* Logitech QuickCam E2500 */
+ 	{USB_DEVICE(0x0000, 0x0000)},	/* MystFromOri Unknow Camera */
+ 	{}			/* Terminating entry */
+ };
+@@ -1959,11 +1962,13 @@
+ 	}
+ 	if (freq_set == freq_50HZ) {
+ 		PDEBUG(1, "Light frequency banding filter set to 50HZ mode");
++		/*
+ 		if (spca50x->mode && spca50x->funct.set_50HZ) {
+ 			spca50x->funct.set_50HZ(spca50x);
+ 		} else if (spca50x->funct.set_50HZScale) {
+ 			spca50x->funct.set_50HZScale(spca50x);
+-		}
++		}*/
++		PDEBUG(1, "Done (Blah!)");
+ 	} else if (freq_set == freq_60HZ) {
+ 		PDEBUG(1, "Light frequency banding filter set to 60HZ mode");
+ 		if (spca50x->mode && spca50x->funct.set_60HZ) {
+@@ -2009,6 +2014,7 @@
+ 		spca5xx_dealloc(spca50x);
+ 		goto out2;
+ 	}
++	PDEBUG(0, "Init decoder\n");
+ 	spca5xx_initDecoder(spca50x);
+ /* open always start in rgb24 a bug in gqcam 
+ did not select the palette nor the size  
+@@ -3360,6 +3366,16 @@
+ 		};
+ 		break;
+ 	case 0x046d:		/* Logitech Labtec */
++		switch (product) {
++		case 0x089d:
++			spca50x->desc = LogitechQuickCamE2500;
++			spca50x->bridge = BRIDGE_ZC3XX;
++			spca50x->sensor = SENSOR_MC501CB;
++			break;
++		default:
++			goto error;
++		};
++		break;
+ 	case 0x041E:		/* Creative cameras */
+ 		switch (product) {
+ 		case 0x400A:

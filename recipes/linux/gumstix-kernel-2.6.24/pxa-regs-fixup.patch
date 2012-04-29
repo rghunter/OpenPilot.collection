@@ -1,0 +1,10 @@
+--- linux-2.6.24.orig/include/asm-arm/arch-pxa/udc.h	2008-02-10 15:59:02.000000000 +0000
++++ linux-2.6.24/include/asm-arm/arch-pxa/udc.h	2008-02-12 10:26:51.000000000 +0000
+@@ -2,6 +2,7 @@
+  * linux/include/asm-arm/arch-pxa/udc.h
+  *
+  */
++#include <asm/arch/pxa-regs.h>
+ #include <asm/mach/udc_pxa2xx.h>
+ 
+ extern void pxa_set_udc_info(struct pxa2xx_udc_mach_info *info);

@@ -1,0 +1,13 @@
+--- uvccapture-0.5/Makefile (copy)	2008-08-01 04:26:18.000000000 +0200
++++ uvccapture-0.5/Makefile	2009-01-21 16:41:58.000000000 +0100
+@@ -1,7 +1,7 @@
+-CC=gcc
+-CPP=g++
++#CC=gcc
++#CPP=g++
+ APP_BINARY=uvccapture
+-VERSION = 0.4
++VERSION = 0.5
+ PREFIX=/usr/local/bin
+ 
+ WARNINGS = -Wall

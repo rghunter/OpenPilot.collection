@@ -1,0 +1,54 @@
+--- linux-2.6.24.orig/include/sound/pcm_params.h	2008-01-24 22:58:37.000000000 +0000
++++ linux-2.6.24/include/sound/pcm_params.h	2008-02-09 10:47:46.000000000 +0000
+@@ -179,16 +179,8 @@
+ 	return 1;
+ }
+ 
+-static inline int snd_mask_refine(struct snd_mask *mask,
+-				  const struct snd_mask *v)
+-{
+-	struct snd_mask old;
+-	snd_mask_copy(&old, mask);
+-	snd_mask_intersect(mask, v);
+-	if (snd_mask_empty(mask))
+-		return -EINVAL;
+-	return !snd_mask_eq(mask, &old);
+-}
++void snd_mask_print( const struct snd_mask *m1, const struct snd_mask *m2 );
++int snd_mask_refine(struct snd_mask *mask, const struct snd_mask *v);
+ 
+ static inline int snd_mask_refine_first(struct snd_mask *mask)
+ {
+--- linux-2.6.24.orig/sound/core/pcm_lib.c	2008-01-24 22:58:37.000000000 +0000
++++ linux-2.6.24/sound/core/pcm_lib.c	2008-02-09 10:47:46.000000000 +0000
+@@ -2128,3 +2128,18 @@
+ }
+ 
+ EXPORT_SYMBOL(snd_pcm_lib_readv);
++
++int snd_mask_refine(struct snd_mask *mask,
++				  const struct snd_mask *v)
++{
++	struct snd_mask old;
++	snd_mask_copy(&old, mask);
++	snd_mask_print(mask, v);
++	snd_mask_intersect(mask, v);
++	snd_mask_print(mask, v);
++	if (snd_mask_empty(mask))
++		return -EINVAL;
++	return !snd_mask_eq(mask, &old);
++}
++
++EXPORT_SYMBOL(snd_mask_refine);
+--- linux-2.6.24.orig/sound/core/pcm_native.c	2008-01-24 22:58:37.000000000 +0000
++++ linux-2.6.24/sound/core/pcm_native.c	2008-02-09 10:47:46.000000000 +0000
+@@ -3449,3 +3449,9 @@
+ 		.fasync =		snd_pcm_fasync,
+ 	}
+ };
++
++void snd_mask_print( const struct snd_mask *m1, const struct snd_mask *m2 )
++{
++//    printk( "0x%08x %08x v: 0x%08x %08x\n", m1->bits[1], m1->bits[0], m2->bits[1], m2->bits[0] );
++}
++
