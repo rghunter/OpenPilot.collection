@@ -1,3 +1,0 @@
-# i2c devices
-KERNEL=="i2c-[0-9]*",   NAME="i2c/%n", SYMLINK="%k"
-
