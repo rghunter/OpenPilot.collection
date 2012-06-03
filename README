@@ -9,6 +9,8 @@ SUMMARRY
 
 OpenPilot.collection provides a set of recipes and images to get the gumstix overo up and running with the caspa camera and openpilot Revo. As of now, the caspa integration has been fully tested and the openpilot spi_server has been included, but not tested.
 
+The SPI server is the fruits of J. Cotton's efforts over at OpenPilot. I have a static version of his spi server I pulled off of his github account currently included. Depending on his wishes, I may convert the static version to a meta version that will auto update from his code.
+
 --------------
 INSTALLING OPENPILOT COLLECTIONS AND OPEN EMBEDDED
 --------------
@@ -71,5 +73,65 @@ Now, BUILD!
 $ bitbake omap3-openpilot-image
 
 And grab a snickers, its gonna be a while....
+
+-------
+USAGE INSTRUCTIONS
+-------
+
+Once the image has finished building, its now time to flash it to an SD card for use with the gumstix. For starters, you will need a properly formated SD card. You may consult gumstix.org for help on this:
+
+http://gumstix.org/create-a-bootable-microsd-card.html
+
+Note that the image files are located in ~/overo-oe/tmp/deploy/glibc/images/overo/
+
+I have made a few modifications to u-boot's default environment variables. It is important that the default environment get written to the NAND as the cmemk module needs to have memory allocated to it prior to the kernel getting its grubby little hands on it. To do this, hit any key when the bootloader starts up. You will see a count down shortly after the bootloader is loaded from the mmc, this is when you mash your keyboard. You should be dumped into a command prompt. To load the default variables, your must erase the block of NAND mem that contains the local copy:
+
+$ nand erase 240000 20000
+$ saveenv
+$ bootd
+
+You now have the default environment variables saved to memory and boot should continue.
+
+If you have your caspa camera installed, you can now try streaming the video live over wifi using the DSP arch to handle codec accelaration.
+
+This next section is shamlessly ripped from
+
+http://jumpnowtek.com/index.php?option=com_content&view=article&id=81:gumstix-dsp-gstreamer&catid=35:gumstix&Itemid=67
+
+
+On the Ubuntu client with an of IP 192.168.10.4, run a GStreamer command like the following
+$ gst-launch-0.10 -v udpsrc port=4000 \
+    caps='application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264' \
+    ! rtph264depay ! ffdec_h264 ! xvimagesink sync=false
+ 
+Then on the gumstix side run this, substituting your workstation's IP address
+root@caspa:~# gst-launch -v videotestsrc ! video/x-raw-yuv,width=640,height=480 \
+    ! TIVidenc1 codecName=h264enc engineName=codecServer ! rtph264pay pt=96 \
+    ! udpsink host=192.168.10.4 port=4000
+ 
+You should see a streaming video window pop up on your workstation. You can choose a different port.
+
+End shameless copy paste.
+
+If you got the text screen to appear on your monitor, the next step is to feed off the camera. To do this simply replace videotstsrc in the command you used on the gumstix to v4l2src. The command should look like:
+
+root@caspa:~# gst-launch -v v4l2src ! video/x-raw-yuv,width=640,height=480 \
+    ! TIVidenc1 codecName=h264enc engineName=codecServer ! rtph264pay pt=96 \
+    ! udpsink host=192.168.10.4 port=4000
+
+with the host= argument pointing to your client IP addess.
+
+---
+CONCLUSION
+----
+
+Thats all for now, once I have tested the openpilot SPI server, I will add instructions for its use.
+
+Checkout http://www.openpilot.org for information regading the SPI server
+
+Enjoy
+
+--
+-Ryan
 
 
