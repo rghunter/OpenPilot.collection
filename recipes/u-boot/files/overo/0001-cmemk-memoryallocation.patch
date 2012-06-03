@@ -1,14 +1,14 @@
-commit 1cfafd8020824892c5f18a77d8680fec5e7efea6
+commit 60f549b2b5035b29bc0e4c1c1b5181809f321052
 Author: Ryan Hunter <rghunter@bu.edu>
-Date:   Sat Jun 2 19:49:42 2012 -0400
+Date:   Sun Jun 3 04:17:25 2012 -0400
 
-    changed overo environment variables to include mem
+    fix for cmemk
 
 diff --git a/include/configs/omap3_overo.h b/include/configs/omap3_overo.h
-index 8114194..54666de 100644
+index a0a7a1c..e5d9511 100644
 --- a/include/configs/omap3_overo.h
 +++ b/include/configs/omap3_overo.h
-@@ -166,6 +166,7 @@
+@@ -159,10 +159,12 @@
  	"mmcrootfstype=ext3 rootwait\0" \
  	"nandroot=ubi0:rootfs ubi.mtd=4\0" \
  	"nandrootfstype=ubifs\0" \
@@ -16,7 +16,12 @@ index 8114194..54666de 100644
  	"mmcargs=setenv bootargs console=${console} " \
  		"${optargs} " \
  		"mpurate=${mpurate} " \
-@@ -178,6 +179,7 @@
+ 		"vram=${vram} " \
++		"${mem} " \
+ 		"omapfb.mode=dvi:${dvimode} " \
+ 		"omapdss.def_disp=${defaultdisplay} " \
+ 		"root=${mmcroot} " \
+@@ -171,6 +173,7 @@
  		"${optargs} " \
  		"mpurate=${mpurate} " \
  		"vram=${vram} " \
