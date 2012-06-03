@@ -1,0 +1,75 @@
+Openpilot OpenEmbedded Collections
+Ryan Hunter- Boston University Intelligent Mechatronics Lab
+<rghunter@bu.edu>
+Copyright 2012
+
+-------------
+SUMMARRY
+-------------
+
+OpenPilot.collection provides a set of recipes and images to get the gumstix overo up and running with the caspa camera and openpilot Revo. As of now, the caspa integration has been fully tested and the openpilot spi_server has been included, but not tested.
+
+--------------
+INSTALLING OPENPILOT COLLECTIONS AND OPEN EMBEDDED
+--------------
+
+Installation instructions <more or less ripped from gumstix.org with some minor modifications>
+
+Create directory overo-oe in you home folder
+
+$ mkdir -p ~/overo-oe
+$ cd ~/overo-oe
+
+
+This will be open embeddeds new home away from home. Unless otherwise noted, clone all repos into the overo-oe folder you just created
+Now, checkout the OE metadata and overo branch by cloning from git.
+
+$ cd ~/overo-oe
+$ git clone git://gitorious.org/gumstix-oe/mainline.git org.openembedded.dev
+$ cd org.openembedded.dev
+$ git checkout --track -b overo-2011.03 origin/overo-2011.03
+
+Now get bitbake
+
+$ cd ~/overo-oe
+$ git clone git://git.openembedded.org/bitbake bitbake
+$ cd bitbake
+$ git checkout 1.12.0
+
+Lastly, you need to install the OpenPilot Collections and setup your build directory
+
+$ cd ~/overo-oe
+$ git clone git://github.com/rghunter/OpenPilot.collection.git
+$ cp -R OpenPilot.collection/build ./
+
+At this point you should configure your profile. This can be found in your newly created build directory.
+
+$ vim ~/overo-oe/build/profile
+
+Or whatever flavor text editor you prefer. In the profile file, make nessesary adjustments to point to your build environment. If you followed the instructions to the T and used overo-oe as your build directory, you should be good to go without modification. You may also want to edit site.conf, located in build/conf. If you are running a multi core machine, uncomment the PARALLEL_MAKE and BB_NUMBER_THREADS and edit the numerical values per the instructions above the lines. This will make your build run faster (it took my machine about 4-5 hours and its a decently spec'd workstation)
+
+IF YOU ARE RUNNING UBUNTU 10.10 OR LOWER (or using another linux version) SKIP THIS SECTION:
+----------
+The meta chain has been tested on Ubuntu 10.10 and 11.10. There is a bug with the gcc version included with Ubuntu 11.10 (and probably 11.04, though I have not tested). If you are running a machine thats Ubuntu 11.10 or you encounter and error later on trying to build openssl, you need to use the patch file I have included on your org.openembedded.dev directory.
+
+$ cd ~/overo-oe/org.openembedded.dev
+$ patch -p1 < ~/overo-oe/OpenPilot.collection/ubuntu-11.10-fix.patch
+
+------------
+
+BUILDING YOUR IMAGE:
+
+Now you should be ready to build your image.
+
+First, you need to setup your environment variables, this can be done by:
+
+$ cd ~/over-oe
+$ source build/profile
+
+Now, BUILD!
+
+$ bitbake omap3-openpilot-image
+
+And grab a snickers, its gonna be a while....
+
+
