@@ -1,0 +1,19 @@
+commit 4cae44e2578dc1e3bb1c08f764eb43d6e1b3a12b
+Author: Ryan Hunter <rghunter@bu.edu>
+Date:   Sun Jun 3 03:48:05 2012 -0400
+
+    fixed serial console config
+
+diff --git a/include/configs/omap3_overo.h b/include/configs/omap3_overo.h
+index 54666de..9093bf4 100644
+--- a/include/configs/omap3_overo.h
++++ b/include/configs/omap3_overo.h
+@@ -155,7 +155,7 @@
+ 
+ #define CONFIG_EXTRA_ENV_SETTINGS \
+ 	"loadaddr=0x82000000\0" \
+-	"console=ttyO2,115200n8\0" \
++	"console=ttyS2,115200n8\0" \
+ 	"mpurate=500\0" \
+ 	"optargs=\0" \
+ 	"vram=12M\0" \
