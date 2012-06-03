@@ -1,0 +1,21 @@
+commit 7450286f1d8f6c85f59230902121bc15c2843084
+Author: Ryan Hunter <rghunter@bu.edu>
+Date:   Sat Jun 2 21:36:14 2012 -0400
+
+    fixed prefferd version
+
+diff --git a/conf/distro/include/angstrom-2008-preferred-versions.inc b/conf/distro/include/angstrom-2008-preferred-versions.inc
+index 4833d35..ae40147 100644
+--- a/conf/distro/include/angstrom-2008-preferred-versions.inc
++++ b/conf/distro/include/angstrom-2008-preferred-versions.inc
+@@ -37,8 +37,8 @@ PREFERRED_VERSION_mythplugins   = "0.23"
+ PREFERRED_VERSION_myththemes    = "0.23"
+ PREFERRED_VERSION_mythtv        = "0.23"
+ PREFERRED_VERSION_mplayer       = "0.0+1.0rc3+svnr%"
+-PREFERRED_VERSION_openssl = "1.0.0d"
+-PREFERRED_VERSION_openssl-native = "1.0.0d"
++PREFERRED_VERSION_openssl = "0.9.8m"
++PREFERRED_VERSION_openssl-native = "0.9.8m"
+ PREFERRED_VERSION_pango 	= "1.24.4"
+ PREFERRED_VERSION_pango-native     = "1.24.4"
+ #PREFERRED_VERSION_pixman	= "0.13.2"
