@@ -14,6 +14,7 @@ The SPI server is the fruits of J. Cotton's efforts over at OpenPilot. I have a 
 --------------
 INSTALLING OPENPILOT COLLECTIONS AND OPEN EMBEDDED
 --------------
+NOTE: this requires a fairly inordinant amount of hard disk space. On my machine, the final directory size was a little over 40 GB. You have been warned!
 
 Installation instructions <more or less ripped from gumstix.org with some minor modifications>
 
