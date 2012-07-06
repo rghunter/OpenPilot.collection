@@ -1,3 +1,5 @@
+require gst-plugins.inc
+
 DESCRIPTION="gst plugin to handle optical flow"
 HOMEPAGE="http://github.com/rghunter/OpticalQuad"
 PRIORITY="optional"

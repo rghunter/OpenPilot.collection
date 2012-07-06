@@ -67,6 +67,7 @@ TOOLS_INSTALL = " \
   task-proper-tools \
   u-boot-utils \
   openpilot-server \
+  optical-stab \
  "
 
 IMAGE_INSTALL += " \
