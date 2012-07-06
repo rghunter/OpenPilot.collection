@@ -7,14 +7,10 @@ LICENSE = "GPLv2"
 ARM_INSTRUCTION_SET = "arm"
 
 DEPENDS = "python-numpy ffmpeg gtk+ libtool swig swig-native python jpeg bzip2 zlib libpng tiff glib-2.0"
-SRC_URI = "http://code.opencv.org/svn/opencv/branches/2.4/;module=opencv;proto=https \
-           file://0001-SIFT-unbreak-non-android-ARM-builds.patch;striplevel=2 \
+SRC_URI = "svn://code.opencv.org/svn/opencv/trunk/;module=opencv;rev=8970;proto=http \
 "
 
 PARALLEL_MAKE = ""
-
-SRCREV = "8970"
-PR = "r0"
 
 S = "${WORKDIR}/opencv"
 
