@@ -7,12 +7,12 @@ COMPATIBLE_MACHINE = "overo"
 BOOT_SPLASH ?= "logo_linux_clut224-generic.ppm"
 MUSB_MODE ?= "host"
 
-PV = "2.6.34"
+PV = "2.6.36"
 PR = 102
 S = "${WORKDIR}/git"
 
 SRCREV = "cb89736af28f583598e49a05249334a194d00f1d"
-SRC_URI = "git://www.sakoman.com/git/linux-omap-2.6.git;branch=omap3-2.6.34;protocol=git \
+SRC_URI = "git://www.sakoman.com/git/linux.git;branch=omap3-2.6.36;protocol=git \
 	   file://defconfig \
            file://mt9v032-2.6.34.patch \
 	   file://spidev-enable.patch \
