@@ -2,15 +2,19 @@ Openpilot OpenEmbedded Collections
 Ryan Hunter- Boston University Intelligent Mechatronics Lab
 <rghunter@bu.edu>
 Copyright 2012
+Updated: July 2013
+Ryan G. Hunter- TR Aeronautics
+<rhunter@traeronautics.com>
+Copyright 2013
 
 -------------
 SUMMARRY
 -------------
 
-OpenPilot.collection provides a set of recipes and images to get the gumstix overo up and running with the caspa camera and openpilot Revo. As of now, the caspa integration has been fully tested and the openpilot spi_server has been included, but not tested.
+OpenPilot.collection provides a set of recipes and images to get the gumstix overo up and running with the caspa camera and openpilot Revo. As of now, the caspa integration has been fully tested.
 
-The SPI server is the fruits of J. Cotton's efforts over at OpenPilot. I have a static version of his spi server I pulled off of his github account currently included. Depending on his wishes, I may convert the static version to a meta version that will auto update from his code.
-
+NOTE: Due to repo changed, the openpilot_SPI server has been removed
+ 
 --------------
 INSTALLING OPENPILOT COLLECTIONS AND OPEN EMBEDDED
 --------------
@@ -57,6 +61,17 @@ The meta chain has been tested on Ubuntu 10.10 and 11.10. There is a bug with th
 
 $ cd ~/overo-oe/org.openembedded.dev
 $ patch -p1 < ~/overo-oe/OpenPilot.collection/ubuntu-11.10-fix.patch
+
+SOME ADITIONAL NOTES:
+-----------
+
+On Ubuntu 12.04 lts (and I'm sure other distros) you need to install the followi
+ng tools:
+        cvs
+        diffstat
+        gawk
+        libsigsegv2 
+        texi2html
 
 ------------
 
@@ -121,6 +136,18 @@ root@caspa:~# gst-launch -v v4l2src ! video/x-raw-yuv,width=640,height=480 \
     ! udpsink host=192.168.10.4 port=4000
 
 with the host= argument pointing to your client IP addess.
+
+---
+TROUBLESHOOTING
+---
+
+ When building, you recieve the following error from Bitbake: "Using dash as /bin/sh causes various subtle build problems, please use bash instead."
+
+There is a problem with dash (fo-bash) which is default installed on Ubuntu (The author is currently running 12.04lts). This error can be resolved by running
+
+$ sudo dpkg-reconfigure dash
+
+Select NO to use bash as default instead
 
 ---
 CONCLUSION
